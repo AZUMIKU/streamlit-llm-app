@@ -3,13 +3,16 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import streamlit as st
-from langchain.llms import OpenAI
-from langchain.schema import HumanMessage
+from langchain_openai import OpenAI
+import os
 
 # LLMからの回答を取得する関数
 def get_llm_response(input_text, language_choice):
     # OpenAI LLMの初期化（API キーは環境変数から取得）
-    llm = OpenAI(temperature=0.7)
+    llm = OpenAI(
+        temperature=0.7,
+        api_key=os.getenv("OPENAI_API_KEY")
+    )
     
     # プロンプトの設定
     if language_choice == "A":
@@ -18,7 +21,7 @@ def get_llm_response(input_text, language_choice):
         prompt = f"標準語で丁寧に答えてください。質問: {input_text}"
     
     # LLMに問い合わせ
-    response = llm(prompt)
+    response = llm.invoke(prompt)
     return response
 
 # Streamlitアプリのメイン部分
