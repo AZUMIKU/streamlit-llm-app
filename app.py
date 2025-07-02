@@ -1,60 +1,45 @@
-from dotenv import load_dotenv
-
-load_dotenv()
-
 import streamlit as st
-from langchain_openai import OpenAI
-import os
 
-# LLMからの回答を取得する関数
-def get_llm_response(input_text, language_choice):
-    # OpenAI LLMの初期化（API キーは環境変数から取得）
-    llm = OpenAI(
-        temperature=0.7,
-        api_key=os.getenv("OPENAI_API_KEY")
-    )
-    
-    # プロンプトの設定
-    if language_choice == "A":
-        prompt = f"関西弁で答えてください。質問: {input_text}"
-    else:  # B
-        prompt = f"標準語で丁寧に答えてください。質問: {input_text}"
-    
-    # LLMに問い合わせ
-    response = llm.invoke(prompt)
-    return response
+st.title("実験的APP: 文字＆肥満度計算")
 
-# Streamlitアプリのメイン部分
-def main():
-    st.title("LLMチャットアプリ")
-    st.write("これは試作です、AかBのラジオボタンを選び、質問してください")
-    
-    # ラジオボタンの設定
-    language_option = st.radio(
-        "回答スタイルを選択してください：",
-        ("A", "B"),
-        help="A: 関西弁、B: 標準語"
-    )
-    
-    # 入力フォーム
-    user_input = st.text_input("質問を入力してください：")
-    
-    # 送信ボタン
-    if st.button("送信"):
-        if user_input:
-            try:
-                # LLMからの回答を取得
-                with st.spinner("回答を生成中..."):
-                    response = get_llm_response(user_input, language_option)
-                
-                # 回答を表示
-                st.subheader("回答：")
-                st.write(response)
-                
-            except Exception as e:
-                st.error(f"エラーが発生しました: {str(e)}")
+st.write("##### 動作モード1: 文字数カウント")
+st.write("入力フォームにテキストを入力し、「実行」ボタンを押すことで文字数をカウントできます。")
+st.write("##### 動作モード2: BMI値の計算")
+st.write("身長と体重を入力することで、肥満度を表す体型指数のBMI値を算出できます。")
+
+selected_item = st.radio(
+    "動作モードを選択してください。",
+    ["文字数カウント", "BMI値の計算"]
+)
+
+st.divider()
+
+if selected_item == "文字数カウント":
+    input_message = st.text_input(label="文字数のカウント対象となるテキストを入力してください。")
+    text_count = len(input_message)
+
+else:
+    height = st.text_input(label="身長（cm）を入力してください。")
+    weight = st.text_input(label="体重（kg）を入力してください。")
+
+if st.button("実行"):
+    st.divider()
+
+    if selected_item == "文字数カウント":
+        if input_message:
+            st.write(f"文字数: **{text_count}**")
+
         else:
-            st.warning("質問を入力してください")
+            st.error("カウント対象となるテキストを入力してから「実行」ボタンを押してください。")
 
-if __name__ == "__main__":
-    main()
+    else:
+        if height and weight:
+            try:
+                bmi = round(int(weight) / ((int(height)/100) ** 2), 1)
+                st.write(f"BMI値: {bmi}")
+
+            except ValueError as e:
+                st.error("身長と体重は数値で入力してください。")
+
+        else:
+            st.error("身長と体重をどちらも入力してください。")
