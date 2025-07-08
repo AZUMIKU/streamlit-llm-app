@@ -1,45 +1,71 @@
 import streamlit as st
+from langchain.chat_models import ChatOpenAI
+from langchain.schema import HumanMessage, SystemMessage
+import os
 
-st.title("実験的APP: 文字＆肥満度計算")
+from dotenv import load_dotenv
+load_dotenv()
 
-st.write("##### 動作モード1: 文字数カウント")
-st.write("入力フォームにテキストを入力し、「実行」ボタンを押すことで文字数をカウントできます。")
-st.write("##### 動作モード2: BMI値の計算")
-st.write("身長と体重を入力することで、肥満度を表す体型指数のBMI値を算出できます。")
 
-selected_item = st.radio(
-    "動作モードを選択してください。",
-    ["文字数カウント", "BMI値の計算"]
+def get_expert_response(user_input, expert_type):
+    """LLMからの回答を返す関数"""
+    
+    # 専門家タイプに応じてシステムメッセージを設定
+    if expert_type == 'プログラミング専門家':
+        system_message = "あなたはプログラミングの専門家です。技術的な質問に詳しく答えてください。"
+    else:  # 料理専門家
+        system_message = "あなたは料理の専門家です。料理に関する質問に詳しく答えてください。"
+    
+    try:
+        # ChatOpenAIインスタンスの作成
+        chat = ChatOpenAI(
+            model="gpt-4o-mini",  # モデル名を指定
+            temperature=0.7,
+            max_tokens=500,
+        )
+        
+        # メッセージの作成
+        messages = [
+            SystemMessage(content=system_message),
+            HumanMessage(content=user_input)
+        ]
+        
+        # LLMに送信して回答を取得
+        response = chat(messages)
+        return response.content
+        
+    except Exception as e:
+        return f"エラーが発生しました: {str(e)}"
+
+# Streamlitアプリ
+st.title("専門家チャットアプリ")
+
+st.markdown("""
+## 使い方
+1. 専門家を選択
+2. 質問を入力
+3. 「回答を取得」ボタンをクリック
+""")
+
+# 専門家選択
+expert_type = st.radio(
+    "専門家を選択してください:",
+    ["プログラミング専門家", "料理専門家"]
 )
 
-st.divider()
+# 質問入力
+user_input = st.text_area(
+    "質問を入力してください:",
+    height=100,
+    placeholder="例: Pythonのリスト操作について教えて"
+)
 
-if selected_item == "文字数カウント":
-    input_message = st.text_input(label="文字数のカウント対象となるテキストを入力してください。")
-    text_count = len(input_message)
-
-else:
-    height = st.text_input(label="身長（cm）を入力してください。")
-    weight = st.text_input(label="体重（kg）を入力してください。")
-
-if st.button("実行"):
-    st.divider()
-
-    if selected_item == "文字数カウント":
-        if input_message:
-            st.write(f"文字数: **{text_count}**")
-
-        else:
-            st.error("カウント対象となるテキストを入力してから「実行」ボタンを押してください。")
-
+# 回答取得ボタン
+if st.button("回答を取得"):
+    if user_input.strip():
+        with st.spinner("回答を生成中..."):
+            response = get_expert_response(user_input, expert_type)
+            st.subheader(f"{expert_type}の回答:")
+            st.write(response)
     else:
-        if height and weight:
-            try:
-                bmi = round(int(weight) / ((int(height)/100) ** 2), 1)
-                st.write(f"BMI値: {bmi}")
-
-            except ValueError as e:
-                st.error("身長と体重は数値で入力してください。")
-
-        else:
-            st.error("身長と体重をどちらも入力してください。")
+        st.warning("質問を入力してください。")
