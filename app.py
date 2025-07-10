@@ -1,10 +1,16 @@
 import streamlit as st
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
+from openai import OpenAI
 import os
 
 from dotenv import load_dotenv
 load_dotenv()
+
+# OpenAI APIキーの確認
+if not os.getenv("OPENAI_API_KEY"):
+    st.error("OpenAI API キーが設定されていません。.envファイルを確認してください。")
+    st.stop()
 
 
 def get_expert_response(user_input, expert_type):
@@ -17,22 +23,20 @@ def get_expert_response(user_input, expert_type):
         system_message = "あなたは料理の専門家です。料理に関する質問に詳しく答えてください。"
     
     try:
-        # ChatOpenAIインスタンスの作成
-        chat = ChatOpenAI(
-            model="gpt-4o-mini",  # モデル名を指定
+        # 直接OpenAIクライアントを使用
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_message},
+                {"role": "user", "content": user_input}
+            ],
             temperature=0.7,
-            max_tokens=500,
+            max_tokens=500
         )
         
-        # メッセージの作成
-        messages = [
-            SystemMessage(content=system_message),
-            HumanMessage(content=user_input)
-        ]
-        
-        # LLMに送信して回答を取得
-        response = chat(messages)
-        return response.content
+        return response.choices[0].message.content
         
     except Exception as e:
         return f"エラーが発生しました: {str(e)}"
