@@ -17,12 +17,11 @@ def get_expert_response(user_input, expert_type):
         system_message = "あなたは料理の専門家です。料理に関する質問に詳しく答えてください。"
     
     try:
-        # ChatOpenAIインスタンスの作成（proxiesエラー回避）
+        # ChatOpenAIインスタンスの作成
         chat = ChatOpenAI(
-            model_name="gpt-4o-mini",
+            model="gpt-4o-mini",  # モデル名を指定
             temperature=0.7,
             max_tokens=500,
-            openai_api_key=os.getenv("OPENAI_API_KEY")
         )
         
         # メッセージの作成
