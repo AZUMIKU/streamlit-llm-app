@@ -1,4 +1,10 @@
 streamlit==1.41.1
+langchain==0.3.0
+langchain-openai==0.2.2
+langchain-core==0.3.68
+langchain-community==0.3.0
 python-dotenv==1.1.1
-openai==1.35.0
+openai==1.47.0
+httpx==0.27.2
+pydantic==2.9.2
 
